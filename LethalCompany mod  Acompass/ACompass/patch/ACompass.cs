@@ -3,6 +3,8 @@ using System.IO;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.GraphicsBuffer;
+using static UnityEngine.UIElements.StylePropertyAnimationSystem;
 
 
 namespace Friskzips.patch
@@ -20,6 +22,13 @@ namespace Friskzips.patch
 
         public static int position = 69;
 
+        public static int default_x_value = 0;
+
+        public static int x_value = 0;
+
+        public static RectTransform rt;
+
+        public static GameObject compassObject;
         public static void loadAssets()
         {
             if (loaded == false)
@@ -39,7 +48,29 @@ namespace Friskzips.patch
                 }
             }
         }
-        
+
+        [HarmonyPatch(typeof(StartOfRound), "Update")]
+        [HarmonyPostfix]
+        public static void hideCompass(StartOfRound __instance)
+        {
+            //Plugin.Log.LogWarning(__instance.inShipPhase);
+
+
+
+            if (compassObject != null)
+            {
+                if (__instance.inShipPhase && Plugin.hideWhenInOrbit.Value)
+                {
+                    compassObject.SetActive(false);
+                }
+
+                else if(!__instance.inShipPhase || !Plugin.hideWhenInOrbit.Value)
+                {
+                    compassObject.SetActive(true);
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(HUDManager), "Awake")]
         [HarmonyPostfix]
 
@@ -57,6 +88,7 @@ namespace Friskzips.patch
             GameObject val = GameObject.Instantiate(prefab);
 
             val = UnityEngine.Object.Instantiate<GameObject>(val, transform);
+            compassObject = val;
             updater = val.AddComponent<CompassUpdater>();
             updater.CompassImage = ((Component)val.transform.GetChild(0)).GetComponentInChildren<RawImage>();
             
@@ -64,7 +96,7 @@ namespace Friskzips.patch
             //val.transform.position = new UnityEngine.Vector3(val.transform.position.x, val.transform.position.y-0.021f, val.transform.position.z);
             
             //Adjust the indicator position
-            Plugin.Log.LogInfo(val.transform.position.y);
+            Plugin.Log.LogDebug(val.transform.position.y);
             Transform Compass = val.transform.Find("Compass");
             Transform Indicator = Compass.transform.Find("Indicator");
             Indicator.position = new UnityEngine.Vector3(Indicator.position.x, Indicator.position.y-0.017f, Indicator.position.z);
@@ -72,10 +104,12 @@ namespace Friskzips.patch
 
             position = 69;
             firstTimeTexture = false;
+            
         }
 
         public class CompassUpdater : MonoBehaviour
         {
+
 
             public RawImage CompassImage;
 
@@ -118,8 +152,29 @@ namespace Friskzips.patch
 
                 }
 
-                
-                if(position != (int)Plugin.position.Value)
+                //OFFSET VALUE
+                rt = GetComponent<RectTransform>();               
+                if (default_x_value == 0)
+                {
+                    default_x_value = (int)transform.localPosition.x;
+                }
+                float clampedX = Mathf.Clamp(Plugin.x_offset.Value, -100f, 100f); 
+                Vector2 pos = rt.anchoredPosition;
+                pos.x = clampedX;
+
+                // Ottieni la larghezza effettiva del parent (Canvas)
+                float canvasWidth = ((RectTransform)rt.parent).rect.width;
+
+                // Calcola posizione in pixel: da -canvasWidth/2 a +canvasWidth/2
+                float pixelX = (clampedX / 100f) * (canvasWidth / 2f);
+
+                // Imposta la posizione rispetto al centro
+                Vector2 pos2 = rt.anchoredPosition;
+                pos2.x = pixelX;
+                rt.anchoredPosition = pos2;
+            
+
+                if (position != (int)Plugin.position.Value)
                 {
                     position = (int)Plugin.position.Value;
                     if (position == 0)
@@ -133,8 +188,8 @@ namespace Friskzips.patch
                     {
                         transform.localPosition = new UnityEngine.Vector3(0, 218.5156f, 0);
                     }
-                    Plugin.Log.LogInfo("pos " + transform.localPosition.x +", "+ transform.localPosition.y+", "+ transform.localPosition.z);
-                    Plugin.Log.LogInfo("pos enum " + position);
+                    Plugin.Log.LogDebug("pos " + transform.localPosition.x +", "+ transform.localPosition.y+", "+ transform.localPosition.z);
+                    Plugin.Log.LogDebug("pos enum " + position);
                     
                 }
             }

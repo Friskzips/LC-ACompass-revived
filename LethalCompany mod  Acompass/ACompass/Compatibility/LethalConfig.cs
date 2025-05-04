@@ -36,6 +36,13 @@ namespace Friskzips
                 RequiresRestart = false
             });
 
+            var x_offsetIntSlider = new IntSliderConfigItem(Plugin.x_offset, new IntSliderOptions
+            {
+                Min = -100,
+                Max = 100,
+                RequiresRestart = false
+            }); 
+
             var oldTextureCheckbox = new BoolCheckBoxConfigItem(Plugin.oldTexture, new BoolCheckBoxOptions
             {
                 RequiresRestart = false
@@ -46,9 +53,16 @@ namespace Friskzips
                 RequiresRestart = false
             });
 
+            var hideWhenInOrbitCheckbox = new BoolCheckBoxConfigItem(Plugin.hideWhenInOrbit, new BoolCheckBoxOptions
+            {
+                RequiresRestart = false
+            });
+
             LethalConfigManager.AddConfigItem(positionEnum);
+            LethalConfigManager.AddConfigItem(x_offsetIntSlider);
             LethalConfigManager.AddConfigItem(oldTextureCheckbox);
             LethalConfigManager.AddConfigItem(alignToShipRadarCheckbox);
+            LethalConfigManager.AddConfigItem(hideWhenInOrbitCheckbox);
             LethalConfigManager.SetModDescription("Original mod by alekso56");
             LethalConfigManager.SkipAutoGen();
         }

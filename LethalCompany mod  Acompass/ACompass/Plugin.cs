@@ -15,10 +15,12 @@ public class Plugin : BaseUnityPlugin
 {
     public static Plugin Instance { get; set; }
 
+    public static ConfigEntry<int> x_offset { get; private set; }
     public static ConfigEntry<configHudPosition> position { get; private set; }
     public static ConfigEntry<bool> oldTexture { get; private set; }
-
     public static ConfigEntry<bool> alignToShipRadar { get; private set; }
+
+    public static ConfigEntry<bool> hideWhenInOrbit { get; private set; }
 
     public enum configHudPosition
     {
@@ -57,6 +59,12 @@ public class Plugin : BaseUnityPlugin
             new ConfigDescription("The compass position it can be Bottom or Top.\nDefault: Bottom")
             );
 
+        x_offset = Config.Bind(
+            new ConfigDefinition("Hud", "X-axis offset"),
+            0,
+            new ConfigDescription("The position of the compass on the x-axis")
+            );
+
         oldTexture = Config.Bind(
            new ConfigDefinition("Hud", "Old texture"),
            false,
@@ -67,6 +75,12 @@ public class Plugin : BaseUnityPlugin
            new ConfigDefinition("Hud", "Align to the ship monitor"),
            true,
            new ConfigDescription("If you want the compass to align to the ship monitor.\nDefault: True")
+           );
+
+        hideWhenInOrbit = Config.Bind(
+           new ConfigDefinition("Hud", "Hide when in orbit"),
+           true,
+           new ConfigDescription("If you want the compass to be hidden in orbit.\nDefault: True")
            );
 
         Log.LogInfo($"Config loaded!");
