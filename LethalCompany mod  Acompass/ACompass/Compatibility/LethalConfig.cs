@@ -58,11 +58,17 @@ namespace Friskzips
                 RequiresRestart = false
             });
 
+            var hideWhenInsideCheckbox = new BoolCheckBoxConfigItem(Plugin.hideWhenInside, new BoolCheckBoxOptions
+            {
+                RequiresRestart = false
+            });
+
             LethalConfigManager.AddConfigItem(positionEnum);
             LethalConfigManager.AddConfigItem(x_offsetIntSlider);
             LethalConfigManager.AddConfigItem(oldTextureCheckbox);
             LethalConfigManager.AddConfigItem(alignToShipRadarCheckbox);
             LethalConfigManager.AddConfigItem(hideWhenInOrbitCheckbox);
+            LethalConfigManager.AddConfigItem(hideWhenInsideCheckbox);
             LethalConfigManager.SetModDescription("Original mod by alekso56");
             LethalConfigManager.SkipAutoGen();
         }

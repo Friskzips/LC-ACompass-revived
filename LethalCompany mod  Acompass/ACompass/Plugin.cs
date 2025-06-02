@@ -22,6 +22,8 @@ public class Plugin : BaseUnityPlugin
 
     public static ConfigEntry<bool> hideWhenInOrbit { get; private set; }
 
+    public static ConfigEntry<bool> hideWhenInside { get; private set; }
+
     public enum configHudPosition
     {
         Bottom,
@@ -81,6 +83,12 @@ public class Plugin : BaseUnityPlugin
            new ConfigDefinition("Hud", "Hide when in orbit"),
            true,
            new ConfigDescription("If you want the compass to be hidden in orbit.\nDefault: True")
+           );
+
+        hideWhenInside = Config.Bind(
+           new ConfigDefinition("Hud", "Hide when inside the dungeon"),
+           true,
+           new ConfigDescription("If you want the compass to be hidden inside the dungeon.\nDefault: True")
            );
 
         Log.LogInfo($"Config loaded!");

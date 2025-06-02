@@ -20,15 +20,23 @@ namespace Friskzips.patch
 
         public static bool firstTimeTexture = false;
 
+        public static bool spectating = false;
+
+        public static bool inside = false;
+
         public static int position = 69;
 
         public static int default_x_value = 0;
+
+        public static GameNetworkManager GameNetworkInstance;
 
         public static int x_value = 0;
 
         public static RectTransform rt;
 
         public static GameObject compassObject;
+
+        public static bool inTerminal = false;
         public static void loadAssets()
         {
             if (loaded == false)
@@ -49,22 +57,50 @@ namespace Friskzips.patch
             }
         }
 
+        [HarmonyPatch(typeof(GameNetworkManager), "ConnectionApproval")]
+        [HarmonyPostfix]
+        public static void getNetworkInstance(GameNetworkManager __instance)
+        {
+            GameNetworkInstance = __instance;
+        }
+
+        [HarmonyPatch(typeof(GameNetcodeStuff.PlayerControllerB), "Update")]
+        [HarmonyPostfix]
+        public static void getPlayerData(GameNetcodeStuff.PlayerControllerB __instance)
+        {
+            inTerminal = __instance.inTerminalMenu;
+            //spectating = __instance.isPlayerDead;
+            inside = __instance.isInsideFactory;
+            //Plugin.Log.LogWarning("InTerminal: " + inTerminal + "\nSpectacting: " + spectating + "\n Inside: " + inside);
+            Plugin.Log.LogDebug("Inside: " + inside);
+            //Plugin.Log.LogWarning("Spectacting: " + spectating);
+
+            if (GameNetworkInstance.localPlayerController != null)
+            {
+                spectating = GameNetworkInstance.localPlayerController.isPlayerDead;
+            }
+
+
+        }
+
+
+
         [HarmonyPatch(typeof(StartOfRound), "Update")]
         [HarmonyPostfix]
         public static void hideCompass(StartOfRound __instance)
         {
             //Plugin.Log.LogWarning(__instance.inShipPhase);
 
-
+            
 
             if (compassObject != null)
             {
-                if (__instance.inShipPhase && Plugin.hideWhenInOrbit.Value)
+                if ((__instance.inShipPhase && Plugin.hideWhenInOrbit.Value) || (inTerminal) || (spectating) || (inside && Plugin.hideWhenInside.Value))
                 {
                     compassObject.SetActive(false);
                 }
 
-                else if(!__instance.inShipPhase || !Plugin.hideWhenInOrbit.Value)
+                else
                 {
                     compassObject.SetActive(true);
                 }
@@ -73,13 +109,25 @@ namespace Friskzips.patch
 
         [HarmonyPatch(typeof(HUDManager), "Awake")]
         [HarmonyPostfix]
-
         
         public static void AddCompass(HUDManager __instance)
         {
+            //HIDE ZEEKER COMPASS                                      
+            
+                Transform compassObj = __instance.HUDContainer.transform.Find("CompassImage (1)");
+                if( compassObj != null )
+                {
+                    compassObj.gameObject.SetActive(false);
+                }                           
+                else
+                {
+                    Plugin.Log.LogWarning("Couldn't find in \"" + __instance.HUDContainer + "\" the CompassImage");
+                }
 
 
-            Transform transform = __instance.HUDContainer.transform;
+
+                //ADD MY COMPASS
+                Transform transform = __instance.HUDContainer.transform;
             Debug.Log((object)("Attaching compass to :" + (object)transform));
 
             
