@@ -21,6 +21,7 @@ namespace Friskzips.patch
         public static bool firstTimeTexture = false;
 
         public static bool spectating = false;
+        public static bool spectatingFirstTime = false;
 
         public static bool inside = false;
 
@@ -57,12 +58,22 @@ namespace Friskzips.patch
             }
         }
 
+        [HarmonyPatch(typeof(MenuManager), "OnEnable")]
+        [HarmonyPostfix]
+        public static void resetStuff()
+        {
+            spectatingFirstTime = false;
+        }
+
         [HarmonyPatch(typeof(GameNetworkManager), "ConnectionApproval")]
         [HarmonyPostfix]
         public static void getNetworkInstance(GameNetworkManager __instance)
         {
             GameNetworkInstance = __instance;
         }
+
+
+        
 
         [HarmonyPatch(typeof(GameNetcodeStuff.PlayerControllerB), "Update")]
         [HarmonyPostfix]
@@ -72,12 +83,44 @@ namespace Friskzips.patch
             //spectating = __instance.isPlayerDead;
             inside = __instance.isInsideFactory;
             //Plugin.Log.LogWarning("InTerminal: " + inTerminal + "\nSpectacting: " + spectating + "\n Inside: " + inside);
-            Plugin.Log.LogDebug("Inside: " + inside);
+            //Plugin.Log.LogDebug("Inside: " + inside);
             //Plugin.Log.LogWarning("Spectacting: " + spectating);
 
-            if (GameNetworkInstance.localPlayerController != null)
+            if( __instance.IsClient)
             {
-                spectating = GameNetworkInstance.localPlayerController.isPlayerDead;
+                spectating = __instance.isPlayerControlled;
+                if (!spectatingFirstTime)
+                {
+                    Plugin.Log.LogInfo("got the spectating variable");
+                    spectatingFirstTime = true;
+                }
+
+                
+            }
+
+
+
+            if (GameNetworkInstance != null)
+            {
+                if(GameNetworkInstance.localPlayerController != null)
+                {
+                    if(!spectatingFirstTime)
+                    {
+                        Plugin.Log.LogInfo("Found GameNetworkInstance.localPlayerController!");
+                        spectatingFirstTime = true;
+                    }
+                    
+                    spectating = GameNetworkInstance.localPlayerController.isPlayerDead;
+                }
+                else
+                {
+                    Plugin.Log.LogWarning("Couldn't get GameNetworkInstance.localPlayerController, the mod can't detect when you are in spectator");
+                }
+                    
+            }
+            else if(!__instance.IsClient)
+            {
+                Plugin.Log.LogWarning("Couldn't get GameNetworkInstance, the mod can't detect when you are in spectator");
             }
 
 
@@ -91,11 +134,17 @@ namespace Friskzips.patch
         {
             //Plugin.Log.LogWarning(__instance.inShipPhase);
 
-            
+            //debug
+            /*
+            if (!__instance.inShipPhase)
+            {
+                Plugin.Log.LogWarning("spectating: " + spectating);
+            }
+            */
 
             if (compassObject != null)
             {
-                if ((__instance.inShipPhase && Plugin.hideWhenInOrbit.Value) || (inTerminal) || (spectating) || (inside && Plugin.hideWhenInside.Value))
+                if ((__instance.inShipPhase && Plugin.hideWhenInOrbit.Value) || (inTerminal) || (spectating == true) || (inside && Plugin.hideWhenInside.Value))
                 {
                     compassObject.SetActive(false);
                 }
